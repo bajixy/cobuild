@@ -70,7 +70,7 @@ const stats = [
 
 const ctas = [
   ['🔨', "I'm a Builder", 'Post jobs and find verified trade teams for any project, any size.', '/signup?role=builder'],
-  ['🦺', "I'm a Subcontractor", 'Grow your trade business with steady work and reliable crew leaders.', '/signup?role=crew_leader'],
+  ['🦺', "I'm a Subcontractor", 'Grow your trade business with steady work and reliable crew leaders.', '/signup?role=subcontractor'],
   ['📋', "I'm a Crew Leader", 'Pick up shifts near you, lead your team, and get paid on time.', '/signup?role=crew_leader'],
 ];
 
