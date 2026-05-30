@@ -5,6 +5,22 @@ import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+type UserRole = 'builder' | 'subcontractor' | 'crew_leader';
+
+const validRoles: UserRole[] = ['builder', 'subcontractor', 'crew_leader'];
+
+function normaliseRole(value: unknown): UserRole | null {
+  return typeof value === 'string' && validRoles.includes(value as UserRole)
+    ? (value as UserRole)
+    : null;
+}
+
+function dashboardForRole(role: UserRole) {
+  if (role === 'crew_leader') return '/cl/dashboard';
+  if (role === 'subcontractor') return '/s/dashboard';
+  return '/b/dashboard';
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
@@ -18,8 +34,10 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
+    const cleanEmail = email.trim().toLowerCase();
+
     const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
+      email: cleanEmail,
       password,
     });
 
@@ -35,16 +53,24 @@ export default function LoginPage() {
         .from('profiles')
         .select('role')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
-      const dashboardPath =
-        profile?.role === 'crew_leader'
-          ? '/cl/dashboard'
-          : profile?.role === 'subcontractor'
-            ? '/s/dashboard'
-            : '/b/dashboard';
+      const metadataRole = normaliseRole(user.user_metadata?.role);
+      const profileRole = normaliseRole(profile?.role);
+      const role = profileRole ?? metadataRole ?? 'builder';
 
-      router.push(dashboardPath);
+      if (metadataRole && profileRole !== metadataRole) {
+        await supabase.from('profiles').upsert({
+          id: user.id,
+          role: metadataRole,
+          email: user.email ?? cleanEmail,
+          phone: user.user_metadata?.phone ?? null,
+          full_name: user.user_metadata?.full_name ?? user.email ?? cleanEmail,
+        });
+      }
+
+      router.push(dashboardForRole(role));
+      return;
     }
 
     setLoading(false);
