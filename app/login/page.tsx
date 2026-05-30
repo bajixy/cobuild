@@ -37,7 +37,14 @@ export default function LoginPage() {
         .eq('id', user.id)
         .single();
 
-      router.push(profile?.role === 'crew_leader' ? '/cl/dashboard' : '/b/dashboard');
+      const dashboardPath =
+        profile?.role === 'crew_leader'
+          ? '/cl/dashboard'
+          : profile?.role === 'subcontractor'
+            ? '/s/dashboard'
+            : '/b/dashboard';
+
+      router.push(dashboardPath);
     }
 
     setLoading(false);
