@@ -31,6 +31,7 @@ export default function NewProject() {
   const [status, setStatus] = useState('active');
   const [startDate, setStartDate] = useState('');
   const [targetCompletion, setTargetCompletion] = useState('');
+  const [companyName, setCompanyName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -44,11 +45,17 @@ export default function NewProject() {
       return;
     }
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, full_name')
       .eq('id', user.id)
       .maybeSingle();
+
+    if (profileError) {
+      setError(profileError.message);
+      setLoading(false);
+      return;
+    }
 
     if (profile?.role !== 'builder') {
       setError('Only builder accounts can create projects from this page.');
@@ -68,16 +75,39 @@ export default function NewProject() {
       return;
     }
 
-    if (!org) {
-      setError('No organisation found for this account. Create a builder account with a company name first.');
-      setLoading(false);
-      return;
+    let organisationId = org?.id;
+
+    if (!organisationId) {
+      const fallbackCompanyName =
+        companyName.trim() ||
+        user.user_metadata?.company_name ||
+        user.user_metadata?.org_name ||
+        (profile?.full_name ? `${profile.full_name}'s company` : 'Builder company');
+
+      const { data: createdOrg, error: createOrgError } = await supabase
+        .from('organisations')
+        .insert({
+          owner_id: user.id,
+          name: fallbackCompanyName,
+          city: city.trim() || 'Brisbane',
+          state: 'QLD',
+        })
+        .select('id')
+        .single();
+
+      if (createOrgError) {
+        setError(`Could not create builder organisation: ${createOrgError.message}`);
+        setLoading(false);
+        return;
+      }
+
+      organisationId = createdOrg.id;
     }
 
     const { data: project, error: insertError } = await supabase
       .from('projects')
       .insert({
-        organisation_id: org.id,
+        organisation_id: organisationId,
         name: name.trim(),
         address: address.trim() || null,
         city: city.trim() || null,
@@ -142,6 +172,17 @@ export default function NewProject() {
             </div>
 
             <div className="grid gap-5">
+              <div>
+                <label className={labelClass}>Builder company name</label>
+                <input
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder="Optional. Used only if your company profile is missing."
+                  className={inputClass}
+                />
+              </div>
+
               <div>
                 <label className={labelClass}>Project name</label>
                 <input
