@@ -60,7 +60,6 @@ export default function SignupPage() {
       return;
     }
 
-    // Ensure the profile has phone/email metadata immediately.
     await supabase
       .from('profiles')
       .update({ phone: cleanPhone, email: cleanEmail, full_name: fullName.trim(), role })
@@ -79,108 +78,98 @@ export default function SignupPage() {
     router.push(role === 'crew_leader' ? '/cl/dashboard' : '/b/dashboard');
   }
 
+  const inputClass = 'w-full rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-base outline-none transition placeholder:text-neutral-400 focus:border-black';
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <div className="w-full max-w-sm">
-        <Link href="/" className="block mb-8">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-brand-50 flex items-center justify-center text-brand-800 font-medium text-sm">CB</div>
-            <span className="font-medium">CoBuild</span>
+    <div className="min-h-screen bg-white text-black">
+      <header className="border-b border-neutral-200">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+          <Link href="/" className="text-xl font-semibold tracking-tight">cobuild</Link>
+          <div className="flex items-center gap-3 text-sm font-semibold">
+            <Link href="/" className="hidden rounded-full px-4 py-2 hover:bg-neutral-100 sm:block">home</Link>
+            <Link href="/login" className="rounded-full bg-black px-5 py-2.5 text-white hover:bg-neutral-800">log in</Link>
           </div>
-        </Link>
+        </div>
+      </header>
 
-        <h1 className="text-2xl font-medium mb-2">Create account</h1>
-        <p className="text-sm text-gray-600 mb-6">Email login now. Phone is saved for job notifications later.</p>
+      <main className="mx-auto grid min-h-[calc(100vh-73px)] max-w-7xl gap-10 px-6 py-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:py-16">
+        <section className="hidden lg:block">
+          <p className="mb-5 inline-flex rounded-full bg-neutral-100 px-4 py-2 text-sm font-semibold text-neutral-800">sign up free</p>
+          <h1 className="max-w-xl text-6xl font-semibold leading-[0.95] tracking-[-0.055em]">
+            start moving crews faster.
+          </h1>
+          <p className="mt-6 max-w-md text-lg leading-8 text-neutral-600">
+            Create your account, save your phone number for future job notifications, and get into the right workspace.
+          </p>
+          <div className="mt-10 rounded-[2rem] bg-black p-5 text-white">
+            <p className="text-sm font-semibold text-neutral-400">recommended flow</p>
+            <div className="mt-5 space-y-4">
+              <div className="rounded-2xl bg-white/10 p-4">1. choose your role</div>
+              <div className="rounded-2xl bg-white/10 p-4">2. create login details</div>
+              <div className="rounded-2xl bg-white/10 p-4">3. enter dashboard</div>
+            </div>
+          </div>
+        </section>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">I am a...</label>
-          <div className="grid grid-cols-2 gap-2">
+        <section className="mx-auto w-full max-w-xl">
+          <div className="mb-8">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-neutral-500">new account</p>
+            <h2 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">join cobuild</h2>
+            <p className="mt-3 text-neutral-600">Email and password for login. Phone saved for SMS and WhatsApp later.</p>
+          </div>
+
+          <div className="mb-5 grid gap-3 sm:grid-cols-2">
             <button
               type="button"
               onClick={() => setRole('builder')}
-              className={`py-2.5 rounded-lg border ${role === 'builder' ? 'border-brand-600 bg-brand-50 text-brand-800' : 'border-gray-300'}`}
+              className={`rounded-[1.5rem] border p-5 text-left transition ${role === 'builder' ? 'border-black bg-black text-white' : 'border-neutral-200 bg-white hover:border-black'}`}
             >
-              Builder
+              <div className="text-2xl">🔨</div>
+              <div className="mt-4 font-semibold">builder</div>
+              <p className={`mt-1 text-sm ${role === 'builder' ? 'text-neutral-300' : 'text-neutral-500'}`}>post jobs and book crews</p>
             </button>
             <button
               type="button"
               onClick={() => setRole('crew_leader')}
-              className={`py-2.5 rounded-lg border ${role === 'crew_leader' ? 'border-brand-600 bg-brand-50 text-brand-800' : 'border-gray-300'}`}
+              className={`rounded-[1.5rem] border p-5 text-left transition ${role === 'crew_leader' ? 'border-black bg-black text-white' : 'border-neutral-200 bg-white hover:border-black'}`}
             >
-              Crew leader
+              <div className="text-2xl">🦺</div>
+              <div className="mt-4 font-semibold">crew leader</div>
+              <p className={`mt-1 text-sm ${role === 'crew_leader' ? 'text-neutral-300' : 'text-neutral-500'}`}>manage crew and accept work</p>
             </button>
           </div>
-        </div>
 
-        <input
-          type="text"
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          placeholder="Your name"
-          autoComplete="name"
-          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-brand-600 mb-3"
-        />
+          <div className="rounded-[2rem] border border-neutral-200 bg-white p-5 shadow-sm sm:p-7">
+            <div className="grid gap-3">
+              <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="your name" autoComplete="name" className={inputClass} />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email address" autoComplete="email" className={inputClass} />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="password, min 8 characters" autoComplete="new-password" className={inputClass} />
+              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="phone, e.g. +61412345678" autoComplete="tel" className={inputClass} />
 
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email address"
-          autoComplete="email"
-          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-brand-600 mb-3"
-        />
+              {role === 'builder' && (
+                <>
+                  <input type="text" value={orgName} onChange={(e) => setOrgName(e.target.value)} placeholder="company name" className={inputClass} />
+                  <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="city" className={inputClass} />
+                </>
+              )}
+            </div>
 
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password, min 8 characters"
-          autoComplete="new-password"
-          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-brand-600 mb-3"
-        />
+            {error && <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
 
-        <input
-          type="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          placeholder="Phone number, e.g. +61412345678"
-          autoComplete="tel"
-          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-brand-600 mb-3"
-        />
+            <button
+              onClick={startSignup}
+              disabled={loading || !fullName || !email || !password || !phone || (role === 'builder' && !orgName)}
+              className="mt-5 w-full rounded-full bg-black px-6 py-4 font-semibold text-white transition hover:bg-neutral-800 disabled:opacity-50"
+            >
+              {loading ? 'creating account...' : 'create account'}
+            </button>
 
-        {role === 'builder' && (
-          <>
-            <input
-              type="text"
-              value={orgName}
-              onChange={(e) => setOrgName(e.target.value)}
-              placeholder="Company name"
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-brand-600 mb-3"
-            />
-            <input
-              type="text"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              placeholder="City"
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-brand-600 mb-4"
-            />
-          </>
-        )}
-
-        {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
-
-        <button
-          onClick={startSignup}
-          disabled={loading || !fullName || !email || !password || !phone || (role === 'builder' && !orgName)}
-          className="w-full bg-brand-600 text-white py-2.5 rounded-lg font-medium hover:bg-brand-800 disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {loading ? 'Creating account...' : 'Create account'}
-        </button>
-
-        <div className="mt-8 text-center text-sm text-gray-600">
-          Already have an account? <Link href="/login" className="text-brand-600 font-medium">Log in</Link>
-        </div>
-      </div>
+            <p className="mt-6 text-center text-sm text-neutral-600">
+              already have an account? <Link href="/login" className="font-semibold text-black underline underline-offset-4">log in</Link>
+            </p>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
