@@ -1,4 +1,4 @@
-export type UserRole = 'builder' | 'crew_leader' | 'admin';
+export type UserRole = 'builder' | 'crew_leader' | 'subcontractor' | 'admin';
 
 export type TradeType =
   | 'formwork' | 'carpentry' | 'concrete' | 'plumbing'
@@ -99,6 +99,27 @@ export interface Assignment {
   agreed_start: string;
   agreed_end: string;
   status: AssignmentStatus;
+  created_at: string;
+}
+
+export type SubcontractorOpportunityStatus = 'open' | 'filled' | 'cancelled';
+
+export interface SubcontractorOpportunity {
+  id: string;
+  project_id: string | null;
+  posted_by: string;
+  trade: string;
+  specialist_field: string;
+  location: string;
+  stage: string | null;
+  scope_summary: string;
+  start_date: string;
+  duration_days: number;
+  budget_note: string | null;
+  builder_contact_name: string;
+  builder_contact_email: string;
+  builder_contact_phone: string;
+  status: SubcontractorOpportunityStatus;
   created_at: string;
 }
 

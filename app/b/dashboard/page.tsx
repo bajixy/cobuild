@@ -139,9 +139,14 @@ export default function BuilderDashboard() {
               <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">{org?.name || profile?.full_name || 'builder'}</h1>
               <p className="mt-4 max-w-2xl text-neutral-300">Create projects, request crews directly, and see who is working across each site.</p>
             </div>
-            <Link href="/b/requests/new" className="rounded-full bg-white px-6 py-3 text-center font-semibold text-black hover:bg-neutral-200">
-              request crew
-            </Link>
+            <div className="flex flex-wrap gap-3">
+              <Link href="/b/requests/new" className="rounded-full bg-white px-6 py-3 text-center font-semibold text-black hover:bg-neutral-200">
+                request crew
+              </Link>
+              <Link href="/b/subcontractors/new" className="rounded-full border border-white/30 px-6 py-3 text-center font-semibold text-white hover:bg-white/10">
+                request subcontractor
+              </Link>
+            </div>
           </div>
         </section>
 

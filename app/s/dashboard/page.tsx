@@ -41,6 +41,26 @@ type AssignmentRow = {
   } | null;
 };
 
+type SubcontractorOpportunityRow = {
+  id: string;
+  trade: string;
+  specialist_field: string;
+  location: string;
+  stage?: string | null;
+  scope_summary: string;
+  start_date: string;
+  duration_days: number;
+  budget_note?: string | null;
+  builder_contact_name: string;
+  builder_contact_email: string;
+  builder_contact_phone: string;
+  projects?: {
+    name?: string | null;
+    address?: string | null;
+    city?: string | null;
+  } | null;
+};
+
 function dashboardForRole(role?: Role) {
   if (role === 'crew_leader') return '/cl/dashboard';
   if (role === 'builder') return '/b/dashboard';
@@ -55,6 +75,7 @@ export default function SubcontractorDashboard() {
   const [org, setOrg] = useState<Organisation | null>(null);
   const [requests, setRequests] = useState<RequestRow[]>([]);
   const [assignments, setAssignments] = useState<AssignmentRow[]>([]);
+  const [opportunities, setOpportunities] = useState<SubcontractorOpportunityRow[]>([]);
 
   useEffect(() => { load(); }, []);
 
@@ -84,6 +105,14 @@ export default function SubcontractorDashboard() {
       .in('status', ['confirmed', 'in_progress'])
       .order('agreed_start');
     setAssignments((assigns || []) as AssignmentRow[]);
+
+    const { data: openOpportunities } = await supabase
+      .from('subcontractor_opportunities')
+      .select('id, trade, specialist_field, location, stage, scope_summary, start_date, duration_days, budget_note, builder_contact_name, builder_contact_email, builder_contact_phone, projects(name, address, city)')
+      .eq('status', 'open')
+      .order('created_at', { ascending: false })
+      .limit(20);
+    setOpportunities((openOpportunities || []) as SubcontractorOpportunityRow[]);
 
     setLoading(false);
   }
@@ -130,6 +159,56 @@ export default function SubcontractorDashboard() {
           <Metric label="active requests" value={activeRequests} />
           <Metric label="filled requests" value={filledRequests} />
           <Metric label="workers active" value={activeWorkers} />
+        </section>
+
+        <section className="mt-10">
+          <h2 className="mb-4 text-2xl font-semibold tracking-tight">open subcontracting opportunities</h2>
+          {opportunities.length === 0 ? (
+            <EmptyCard title="no open opportunities" text="When builders post specialist subcontracting work, it will appear here for your company to review and contact them directly." />
+          ) : (
+            <div className="space-y-4">
+              {opportunities.map((opportunity) => (
+                <div key={opportunity.id} className="rounded-[1.75rem] border border-neutral-200 p-6">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-xl font-semibold tracking-tight capitalize">{opportunity.trade.replace('_', ' ')}</h3>
+                        <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-700">{opportunity.specialist_field}</span>
+                      </div>
+                      {opportunity.projects?.name && (
+                        <p className="mt-2 text-sm font-semibold text-neutral-700">{opportunity.projects.name}</p>
+                      )}
+                      <p className="mt-1 text-sm text-neutral-500">{opportunity.location}</p>
+                    </div>
+                    <div className="rounded-2xl bg-neutral-100 px-4 py-3 text-sm">
+                      <div className="font-semibold">{opportunity.start_date}</div>
+                      <div className="text-neutral-500">{opportunity.duration_days} day{opportunity.duration_days === 1 ? '' : 's'}</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <OpportunityDetail label="stage" value={opportunity.stage || 'not set'} />
+                    <OpportunityDetail label="budget" value={opportunity.budget_note || 'not specified'} />
+                  </div>
+
+                  <p className="mt-5 text-sm leading-6 text-neutral-600">{opportunity.scope_summary}</p>
+
+                  <div className="mt-5 rounded-[1.25rem] border border-neutral-200 bg-neutral-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">builder contact</p>
+                    <div className="mt-3 flex flex-col gap-2 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+                      <span className="font-semibold">{opportunity.builder_contact_name}</span>
+                      <a href={`mailto:${opportunity.builder_contact_email}`} className="font-semibold text-black underline-offset-2 hover:underline">
+                        {opportunity.builder_contact_email}
+                      </a>
+                      <a href={`tel:${opportunity.builder_contact_phone}`} className="font-semibold text-black underline-offset-2 hover:underline">
+                        {opportunity.builder_contact_phone}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="mt-10 grid gap-8 lg:grid-cols-[1fr_1fr]">
@@ -200,4 +279,13 @@ function EmptyCard({ title, text }: { title: string; text: string }) {
 
 function StatusBadge({ status }: { status: string }) {
   return <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold capitalize text-neutral-700">{status.replace('_', ' ')}</span>;
+}
+
+function OpportunityDetail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-neutral-100 px-4 py-3">
+      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">{label}</div>
+      <div className="mt-1 font-semibold capitalize">{value}</div>
+    </div>
+  );
 }

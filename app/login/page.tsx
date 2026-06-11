@@ -3,16 +3,14 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 type UserRole = 'builder' | 'subcontractor' | 'crew_leader';
 
 const validRoles: UserRole[] = ['builder', 'subcontractor', 'crew_leader'];
 
 function normaliseRole(value: unknown): UserRole | null {
-  return typeof value === 'string' && validRoles.includes(value as UserRole)
-    ? (value as UserRole)
-    : null;
+  if (typeof value !== 'string') return null;
+  return validRoles.includes(value as UserRole) ? (value as UserRole) : null;
 }
 
 function dashboardForRole(role: UserRole) {
@@ -22,7 +20,6 @@ function dashboardForRole(role: UserRole) {
 }
 
 export default function LoginPage() {
-  const router = useRouter();
   const supabase = createClient();
 
   const [email, setEmail] = useState('');
@@ -34,73 +31,106 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
-    const cleanEmail = email.trim().toLowerCase();
+    try {
+      const cleanEmail = email.trim().toLowerCase();
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: cleanEmail,
-      password,
-    });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password,
+      });
 
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
-    }
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data: profile } = await supabase
+      if (!data.user || !data.session) {
+        setError('Login worked, but no session was created. Check email confirmation and Supabase URL settings.');
+        setLoading(false);
+        return;
+      }
+
+      const user = data.user;
+
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', user.id)
         .maybeSingle();
 
+      if (profileError) {
+        setError(`Logged in, but profile could not be read: ${profileError.message}`);
+        setLoading(false);
+        return;
+      }
+
       const metadataRole = normaliseRole(user.user_metadata?.role);
       const profileRole = normaliseRole(profile?.role);
-      const role = profileRole ?? metadataRole ?? 'builder';
+      const role = metadataRole ?? profileRole ?? 'builder';
 
-      if (metadataRole && profileRole !== metadataRole) {
-        await supabase.from('profiles').upsert({
+      if (!profileRole || profileRole !== role) {
+        const { error: upsertError } = await supabase.from('profiles').upsert({
           id: user.id,
-          role: metadataRole,
+          role,
           email: user.email ?? cleanEmail,
           phone: user.user_metadata?.phone ?? null,
           full_name: user.user_metadata?.full_name ?? user.email ?? cleanEmail,
         });
+
+        if (upsertError) {
+          setError(`Logged in, but profile could not be saved: ${upsertError.message}`);
+          setLoading(false);
+          return;
+        }
       }
 
-      router.push(dashboardForRole(role));
-      return;
+      window.location.href = dashboardForRole(role);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unexpected login error.');
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
-  const inputClass = 'w-full rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-base outline-none transition placeholder:text-neutral-400 focus:border-black';
+  const inputClass =
+    'w-full rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-base outline-none transition placeholder:text-neutral-400 focus:border-black';
 
   return (
     <div className="min-h-screen bg-white text-black">
       <header className="border-b border-neutral-200">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link href="/" className="text-xl font-semibold tracking-tight">cobuild</Link>
+          <Link href="/" className="text-xl font-semibold tracking-tight">
+            cobuild
+          </Link>
+
           <div className="flex items-center gap-3 text-sm font-semibold">
-            <Link href="/" className="hidden rounded-full px-4 py-2 hover:bg-neutral-100 sm:block">home</Link>
-            <Link href="/signup" className="rounded-full bg-black px-5 py-2.5 text-white hover:bg-neutral-800">sign up free</Link>
+            <Link href="/" className="hidden rounded-full px-4 py-2 hover:bg-neutral-100 sm:block">
+              home
+            </Link>
+            <Link href="/signup" className="rounded-full bg-black px-5 py-2.5 text-white hover:bg-neutral-800">
+              sign up free
+            </Link>
           </div>
         </div>
       </header>
 
       <main className="mx-auto grid min-h-[calc(100vh-73px)] max-w-7xl gap-10 px-6 py-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:py-16">
         <section className="hidden lg:block">
-          <p className="mb-5 inline-flex rounded-full bg-neutral-100 px-4 py-2 text-sm font-semibold text-neutral-800">welcome back</p>
+          <p className="mb-5 inline-flex rounded-full bg-neutral-100 px-4 py-2 text-sm font-semibold text-neutral-800">
+            welcome back
+          </p>
+
           <h1 className="max-w-xl text-6xl font-semibold leading-[0.95] tracking-[-0.055em]">
             get crews moving again.
           </h1>
+
           <p className="mt-6 max-w-md text-lg leading-8 text-neutral-600">
             Log in to post job requests, manage your crew, and keep site labour coordinated from one workspace.
           </p>
+
           <div className="mt-10 rounded-[2rem] bg-black p-5 text-white">
             <p className="text-sm font-semibold text-neutral-400">today in cobuild</p>
+
             <div className="mt-5 space-y-4">
               <div className="rounded-2xl bg-white/10 p-4">3 open requests near Brisbane</div>
               <div className="rounded-2xl bg-white/10 p-4">same-day crew matching</div>
@@ -111,9 +141,17 @@ export default function LoginPage() {
 
         <section className="mx-auto w-full max-w-xl">
           <div className="mb-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-neutral-500">log in</p>
-            <h2 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">enter cobuild</h2>
-            <p className="mt-3 text-neutral-600">Use your email and password to access your workspace.</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-neutral-500">
+              log in
+            </p>
+
+            <h2 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
+              enter cobuild
+            </h2>
+
+            <p className="mt-3 text-neutral-600">
+              Use your email and password to access your workspace.
+            </p>
           </div>
 
           <div className="rounded-[2rem] border border-neutral-200 bg-white p-5 shadow-sm sm:p-7">
@@ -126,6 +164,7 @@ export default function LoginPage() {
                 autoComplete="email"
                 className={inputClass}
               />
+
               <input
                 type="password"
                 value={password}
@@ -142,7 +181,11 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            {error && <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+            {error && (
+              <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </p>
+            )}
 
             <button
               onClick={login}
@@ -153,7 +196,10 @@ export default function LoginPage() {
             </button>
 
             <p className="mt-6 text-center text-sm text-neutral-600">
-              new to cobuild? <Link href="/signup" className="font-semibold text-black underline underline-offset-4">create an account</Link>
+              new to cobuild?{' '}
+              <Link href="/signup" className="font-semibold text-black underline underline-offset-4">
+                create an account
+              </Link>
             </p>
           </div>
         </section>

@@ -164,6 +164,7 @@ export default function ProjectDetailPage() {
           <Link href="/b/dashboard" className="text-xl font-semibold tracking-tight">cobuild</Link>
           <div className="flex items-center gap-3 text-sm font-semibold">
             <Link href="/b/dashboard" className="rounded-full px-4 py-2 hover:bg-neutral-100">dashboard</Link>
+            <Link href={`/b/subcontractors/new?projectId=${project.id}`} className="rounded-full px-4 py-2 hover:bg-neutral-100">request subcontractor</Link>
             <Link href={`/b/requests/new?projectId=${project.id}`} className="rounded-full bg-black px-5 py-2.5 text-white hover:bg-neutral-800">request crew</Link>
           </div>
         </div>
@@ -208,13 +209,18 @@ export default function ProjectDetailPage() {
             </div>
 
             <div className="rounded-[2rem] bg-neutral-100 p-6">
-              <h3 className="text-lg font-semibold tracking-tight">next step</h3>
+              <h3 className="text-lg font-semibold tracking-tight">next steps</h3>
               <p className="mt-2 text-sm leading-6 text-neutral-600">
-                Post a labour request for this project so CoBuild can match crew leaders and track active workers against this site.
+                Request crew labour for day-to-day workers, or post a subcontractor opportunity for specialist trade companies to contact you directly.
               </p>
-              <Link href={`/b/requests/new?projectId=${project.id}`} className="mt-5 inline-flex rounded-full bg-black px-5 py-3 text-sm font-semibold text-white">
-                request crew
-              </Link>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link href={`/b/requests/new?projectId=${project.id}`} className="inline-flex rounded-full bg-black px-5 py-3 text-sm font-semibold text-white">
+                  request crew
+                </Link>
+                <Link href={`/b/subcontractors/new?projectId=${project.id}`} className="inline-flex rounded-full border border-neutral-300 bg-white px-5 py-3 text-sm font-semibold hover:border-black">
+                  request subcontractor
+                </Link>
+              </div>
             </div>
           </aside>
 
