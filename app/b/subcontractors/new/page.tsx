@@ -9,8 +9,4 @@ type Project = { id: string; name: string; address?: string | null; city?: strin
 
 const specialistFields = [
   'Plumbing company',
-  'Electrical contractor',
-  'Steel fixing company',
-  'Formwork subcontractor',
-  'Concrete subcontractor',
-  'Roofing company
+  'Electrical
