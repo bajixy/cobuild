@@ -1,6 +1,4 @@
--- CoBuild subcontractor opportunities
--- Run this in Supabase SQL Editor after the base schema.
-
+-- Run in Supabase SQL Editor.
 create table if not exists public.subcontractor_opportunities (
   id uuid primary key default gen_random_uuid(),
   project_id uuid references public.projects(id) on delete set null,
@@ -9,4 +7,5 @@ create table if not exists public.subcontractor_opportunities (
   specialist_field text not null,
   location text not null,
   stage text,
-  scope_summary text
+  scope_summary text not null,
+ 
