@@ -7,6 +7,4 @@ import { createClient } from '@/lib/supabase/client';
 
 type Project = { id: string; name: string; address?: string | null; city?: string | null; stage?: string | null };
 
-const specialistFields = [
-  'Plumbing company',
-  'Electrical
+const fields = ['Plumbing company', 'Electrical contractor', 'Steel fixing
